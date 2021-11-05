@@ -1,15 +1,13 @@
-import React, { useState } from "react";
+import React, { useRef } from "react";
+import PropTypes from "prop-types";
 
 const AddPlayerForm = ({ onAddPlayer, players }) => {
-  const [value, setValue] = useState("");
+  const inputRef = useRef();
 
-  const handleValueChange = (event) => {
-    setValue(event.target.value);
-  };
   const addNewPlayer = (event) => {
     event.preventDefault();
     let lastId;
-    let newPlayerName = value;
+    let newPlayerName = inputRef.current.value;
 
     if (players.length === 0) {
       lastId = 0;
@@ -21,24 +19,25 @@ const AddPlayerForm = ({ onAddPlayer, players }) => {
       name: newPlayerName,
       id: lastId + 1,
       score: 0,
+      isHighScore: null,
     };
 
     onAddPlayer(newPlayerObj);
-    setValue("");
+    event.target.reset();
   };
-  
+
   return (
     <form onSubmit={addNewPlayer}>
-      <input
-        type="text"
-        value={value}
-        onChange={handleValueChange}
-        placeholder="Enter a player's name"
-      />
+      <input type="text" ref={inputRef} placeholder="Enter a player's name" />
 
       <input type="submit" value="Add Player" />
     </form>
   );
+};
+
+AddPlayerForm.propTypes = {
+  players: PropTypes.array,
+  onAddPlayer: PropTypes.func,
 };
 
 export default AddPlayerForm;

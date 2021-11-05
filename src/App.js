@@ -1,8 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import "./app.css";
 import Header from "./Header";
 import Player from "./Player";
 import AddPlayerForm from "./AddPlayerForm";
+
+//find a max score
+function getHighScore(array) {
+  if (array.length === 0) {
+    return null;
+  } else {
+    let max = array[0].score;
+    for (let i = 1; i < array.length; i++) {
+      if (array[i].score > max) {
+        max = array[i].score;
+      }
+    }
+    return max;
+  }
+}
+//change a isHighScore key for players with high score
+function checkTheWinner(array) {
+  const maxScore = getHighScore(array);
+  array.map((player) => {
+    if (player.score === maxScore && player.score !== 0) {
+      player.isHighScore = "is-high-score";
+    } else {
+      player.isHighScore = null;
+    }
+  });
+  return array;
+}
 
 const App = () => {
   const [players, setPlayers] = useState(
@@ -13,11 +40,11 @@ const App = () => {
     localStorage.setItem("players", JSON.stringify(players));
   }, [players]);
 
-  const handleRemovePlayer = (id) => {
+  const handleRemovePlayer = useCallback((id) => {
     setPlayers((players) => {
-      return players.filter((player) => player.id !== id);
+      return checkTheWinner(players.filter((player) => player.id !== id));
     });
-  };
+  }, []);
 
   const handleAddPlayer = (newName) => {
     setPlayers((players) => {
@@ -25,28 +52,25 @@ const App = () => {
     });
   };
 
-  const handleScoreChange = (index, delta) => {
+  const handleScoreChange = useCallback((index, delta) => {
     setPlayers((players) => {
       //make a copy of previous "players" state
       const updatedPlayers = [...players]; //or we can use players.slice()
       //a copy of player obj we're targiting
       const updatedPlayer = { ...updatedPlayers[index] };
-      console.log(updatedPlayers);
-      console.log(updatedPlayer);
       //update the target player's score
       updatedPlayer.score += delta;
       //update the player's array with the target plaeyer's score
       updatedPlayers[index] = updatedPlayer;
-      console.log(updatedPlayers[index].score);
       //update the player's state without mutating the original state
+      checkTheWinner(updatedPlayers);
       return updatedPlayers;
     });
-  };
-
+  }, []);
+  
   return (
     <div className="scoreboard">
       <Header
-        title="My Scoreboard"
         players={players}
         addPlayer={handleAddPlayer}
         playerList={players}
@@ -62,6 +86,7 @@ const App = () => {
           key={player.id.toString()}
           removePlayer={handleRemovePlayer}
           changeScore={handleScoreChange}
+          className={player.isHighScore}
         />
       ))}
 
